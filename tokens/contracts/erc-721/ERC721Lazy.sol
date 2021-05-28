@@ -38,6 +38,7 @@ abstract contract ERC721Lazy is IERC721LazyMint, ERC721Upgradeable, Mint721Valid
         require(minter == data.creators[0].account, "tokenId incorrect");
         require(data.creators.length == data.signatures.length);
         require(minter == sender || isApprovedForAll(minter, sender), "ERC721: transfer caller is not owner nor approved");
+        require(bytes(data.uri).length > 0, "uri should be set");//todo нужно как в 1155? а то нигде проверки такой нет. можно пустую задать
 
         for (uint i = 0; i < data.creators.length; i++) {
             address creator = data.creators[i].account;
@@ -56,6 +57,8 @@ abstract contract ERC721Lazy is IERC721LazyMint, ERC721Upgradeable, Mint721Valid
         LibPart.Part[] storage creatorsOfToken = creators[tokenId];
         uint total = 0;
         for(uint i=0; i < _creators.length; i++) {
+            require(_royalties[i].account != address(0x0), "Recipient should be present");//todo такие проверки надо? как в роялтиз
+            require(_royalties[i].value != 0, "Royalty value should be positive");
             creatorsOfToken.push(_creators[i]);
             total = total.add(_creators[i].value);
         }

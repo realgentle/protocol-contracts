@@ -46,16 +46,22 @@ abstract contract ERC1155Lazy is IERC1155LazyMint, ERC1155BaseURI, Mint1155Valid
         address minter = address(data.tokenId >> 96);
         address sender = _msgSender();
 
-        require(minter == data.creators[0].account, "tokenId incorrect");
-        require(data.creators.length == data.signatures.length);
         require(minter == sender || isApprovedForAll(minter, sender), "ERC1155: transfer caller is not approved");
-
-        require(data.supply > 0, "supply incorrect");
         require(_amount > 0, "amount incorrect");
+        //todo эти проверки актуальны в ифе if (supply[data.tokenId] == 0). можно их туда перенести?
+        require(data.creators.length == data.signatures.length);
+        require(data.supply > 0, "supply incorrect");
         require(bytes(data.uri).length > 0, "uri should be set");
+        //это тоже актуально только в ифе. т к только в нем проверяются creators. значит можно хоть что подставить
+        //при повторном lazy минт, а значит эта проверка не имеет смысла
+        require(minter == data.creators[0].account, "tokenId incorrect");
 
         if (supply[data.tokenId] == 0) {
             for (uint i = 0; i < data.creators.length; i++) {
+                //todo хэш от даты LibERC1155LazyMint.hash(data) вычисляется для каждого creator-а,
+                //  при этом она одинакова для всех. это довольно затрано
+                //  можно ли вычислить здесь один раз и передавать параметром в эту функцию?
+                //  для ERC721Lazy такой же вопрос
                 validate(sender, data, i);
             }
 
@@ -65,6 +71,8 @@ abstract contract ERC1155Lazy is IERC1155LazyMint, ERC1155BaseURI, Mint1155Valid
             _setTokenURI(data.tokenId, data.uri);
         }
 
+        //т е при повторных lazy созданиях участвуют только значения: tokenId, to, amount. minter по tokenId д б sender-ом или minter апрувнул sender-а
+        //остальные поля не участвуют и могут быть абсолютно любыми или вообще пустыми: creators, signatures, supply, uri, royalties
         _mint(to, data.tokenId, _amount, "");
     }
 
@@ -85,6 +93,8 @@ abstract contract ERC1155Lazy is IERC1155LazyMint, ERC1155BaseURI, Mint1155Valid
         LibPart.Part[] storage creatorsOfToken = creators[tokenId];
         uint total = 0;
         for(uint i=0; i < _creators.length; i++) {
+            require(_royalties[i].account != address(0x0), "Recipient should be present");//todo такие проверки надо? как в роялтиз
+            require(_royalties[i].value != 0, "Royalty value should be positive");
             creatorsOfToken.push(_creators[i]);
             total = total.add(_creators[i].value);
         }

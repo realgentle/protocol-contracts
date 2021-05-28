@@ -62,11 +62,19 @@ contract ERC1155BaseURI is ERC1155Upgradeable {
      */
     function _setBaseURI(string memory baseURI_) internal virtual {
         _baseURI = baseURI_;
+        //todo и тут хорошо бы событие бросить. важное же действие
+        //хотя оно пока только один раз вызывается - в init. нет отдельных использований, о которых важно знать
+        //с другой стороны это пока. может потом будут использования вне инит
     }
 
     function _clearTokenURI(uint256 tokenId) internal {
         if (bytes(_tokenURIs[tokenId]).length != 0) {
             delete _tokenURIs[tokenId];
+            //todo тут хорошо бы событие бросить. может то же самое но с пустой строкой event URI("": string value, uint256 indexed id);
+            //эта ф-я точно нужна? использований нет
+            //на какой случай предполагается ее использование?
+            //может надо переопределить в нужных классах ф-ю burn и поставить туда использование этой ф-ии?
+            // т е при burn удалять uri
         }
     }
     uint256[50] private __gap;
