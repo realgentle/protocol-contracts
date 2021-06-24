@@ -26,7 +26,7 @@ library LibOrder {
 
     function calculateRemaining(Order memory order, uint fill) internal pure returns (uint makeValue, uint takeValue) {
         takeValue = order.takeAsset.value.sub(fill);
-        makeValue = LibMath.safeGetPartialAmountFloor(order.makeAsset.value, order.takeAsset.value, takeValue);
+        makeValue = order.makeAsset.value.mul(takeValue).div(order.takeAsset.value);
     }
 
     function hashKey(Order memory order) internal pure returns (bytes32) {

@@ -11,6 +11,15 @@ contract("LibFill", accounts => {
 		lib = await LibFillTest.new();
 	});
 
+	it("order should be filled and rounding error shouldn't be thrown", async () => {
+		const left = order.Order(ZERO, order.Asset("0x00000000", "0x", "369"), ZERO, order.Asset("0x00000000", "0x", "22140000000000000000"), 1, 0, 0, "0xffffffff", "0x");
+		const right = order.Order(ZERO, order.Asset("0x00000000", "0x", "60000000000000000"), ZERO, order.Asset("0x00000000", "0x", 1), 1, 0, 0, "0xffffffff", "0x");
+
+		const fill = await lib.fillOrder(left, right, "490000000000000000", 0);
+		assert.equal(fill[0], 1);
+		assert.equal(fill[1], 60000000000000000);
+	});
+
 	describe("right order fill", () => {
 		it("should fill fully right order if amounts are fully matched", async () => {
 			const left = order.Order(ZERO, order.Asset("0x00000000", "0x", 100), ZERO, order.Asset("0x00000000", "0x", 200), 1, 0, 0, "0xffffffff", "0x");
